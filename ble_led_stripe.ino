@@ -6,10 +6,13 @@
 #include <ArduinoJson.h>
 
 BLEServer* pServer = NULL;
-BLECharacteristic* pCharacteristic = NULL;
+BLECharacteristic* writeColorCharacteristic = NULL;
+BLECharacteristic* changeNameCharacteristic = NULL;
 
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define CHARACTERISTIC_UUID_WRITECOLOR "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define CHARACTERISTIC_UUID_CHANGENAME "58479a2e-b3d3-4cbe-8131-1d346e34f349"
+
 
 int redW = 255;
 int greenW = 255;
@@ -30,8 +33,12 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
-class MyCallbacks: public BLECharacteristicCallbacks {
+
+class WriteColorCallback: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
+
+      Serial.println("write to color");
+
       std::string value = pCharacteristic->getValue();
 
       String json = "";
@@ -59,6 +66,34 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     }
 };
 
+
+class ChangeNameCallbacks: public BLECharacteristicCallbacks{
+    void onWrite(BLECharacteristic *pCharacteristic) {
+
+      Serial.println("write to color");
+
+      std::string value = pCharacteristic->getValue();
+
+      String name = "";
+
+      if (value.length() > 0) {
+        for (int i = 0; i < value.length(); i++){
+          name += value[i];
+        }
+        Serial.println("new name: "+name);
+
+        BLEDevice::getAdvertising()->stop();
+        esp_ble_gap_set_device_name(name.c_str());
+        BLEDevice::startAdvertising();
+        
+      }
+
+    }
+};
+
+
+
+
 void setup() {
   Serial.begin(115200);
   
@@ -76,13 +111,21 @@ void setup() {
   Serial.println("BLE Service created");
 
   // Create a BLE Characteristic
-  pCharacteristic = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID,
+  writeColorCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID_WRITECOLOR,
                       BLECharacteristic::PROPERTY_READ   |
                       BLECharacteristic::PROPERTY_WRITE
                     );
-  pCharacteristic->setCallbacks(new MyCallbacks());
-  Serial.println("BLE Characteristic created");
+  changeNameCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID_CHANGENAME,
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_WRITE
+  );
+
+  writeColorCharacteristic->setCallbacks(new WriteColorCallback());
+  changeNameCharacteristic->setCallbacks(new ChangeNameCallbacks());
+  Serial.println("BLE Characteristics created");
+
 
   // Start the service
   pService->start();
@@ -123,8 +166,8 @@ void loop() {
     
       String responsJson = "{\"r\":" + String(redW) + ",\"g\":" + String(greenW) + ",\"b\":" + String(blueW) + "}";
       String notValue = responsJson.c_str();
-      pCharacteristic->setValue((uint8_t*)notValue.c_str(), notValue.length());
-      pCharacteristic->notify();
+      writeColorCharacteristic->setValue((uint8_t*)notValue.c_str(), notValue.length());
+      writeColorCharacteristic->notify();
       Serial.println("Notified value: " + String(notValue));
 
   }
