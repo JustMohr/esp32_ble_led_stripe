@@ -1,9 +1,9 @@
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
-#include <BLE2902.h>
 
 #include <ArduinoJson.h>
+#include <EEPROM.h>
 
 BLEServer* pServer = NULL;
 BLECharacteristic* writeColorCharacteristic = NULL;
@@ -85,10 +85,30 @@ class ChangeNameCallbacks: public BLECharacteristicCallbacks{
         BLEDevice::getAdvertising()->stop();
         esp_ble_gap_set_device_name(name.c_str());
         BLEDevice::startAdvertising();
+
+        saveNameToStorage(name);
         
       }
 
     }
+
+
+    void saveNameToStorage(String name){
+      
+      Serial.print("to save: ");
+      Serial.println(name);
+
+      int i;
+      for(i=0; (i<name.length() && i<=500); i++){
+        EEPROM.write(i, name[i]);
+      }
+      EEPROM.write(i, '\0');
+      EEPROM.commit();
+
+      Serial.println("saved");
+
+    }
+    
 };
 
 
@@ -96,9 +116,12 @@ class ChangeNameCallbacks: public BLECharacteristicCallbacks{
 
 void setup() {
   Serial.begin(115200);
+  EEPROM.begin(510);
   
   // Create the BLE Device
-  BLEDevice::init("Esp32");
+  String name = readNameFromStorage();
+  std::string deviceName = name.c_str();
+  BLEDevice::init(deviceName);
   Serial.println("BLE Device initialized");
 
   // Create the BLE Server
@@ -178,5 +201,28 @@ void loop() {
   analogWrite(0, blueW);
   delay(2);
   counter ++;
+
+}
+
+
+String readNameFromStorage() {
+  String name = "";
+
+  char c = EEPROM.read(0);
+  int i =0;
+  while(c != '\0' && i<=500){
+    name += c;
+    i++;
+    c = EEPROM.read(i);
+  }
+
+  name.trim();
+  if(name.length() == 0){
+    name = "ESP";
+  }
+
+  Serial.println("device name: " +name);
+
+  return name;
 
 }
