@@ -134,7 +134,7 @@ void setup() {
   //Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(false);
+  pAdvertising->setScanResponse(true); //true = issue fix
   BLEDevice::startAdvertising();
   Serial.println("Advertising started. Waiting for a client connection to notify...");
   
