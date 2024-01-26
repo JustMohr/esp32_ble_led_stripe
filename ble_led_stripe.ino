@@ -77,8 +77,10 @@ class ChangeNameCallbacks: public BLECharacteristicCallbacks{
       String name = "";
 
       if (value.length() > 0) {
-        for (int i = 0; i < value.length(); i++){
+
+        for (int i = 0; (i < value.length() && i<25); i++){//-> name max length: 25
           name += value[i];
+          Serial.println(i);
         }
         Serial.println("new name: "+name);
 
@@ -99,7 +101,7 @@ class ChangeNameCallbacks: public BLECharacteristicCallbacks{
       Serial.println(name);
 
       int i;
-      for(i=0; (i<name.length() && i<=500); i++){
+      for(i=0; i<name.length(); i++){
         EEPROM.write(i, name[i]);
       }
       EEPROM.write(i, '\0');
@@ -218,7 +220,7 @@ String readNameFromStorage() {
 
   name.trim();
   if(name.length() == 0){
-    name = "ESP";
+    name = "rgbS";
   }
 
   Serial.println("device name: " +name);
