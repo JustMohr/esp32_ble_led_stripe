@@ -80,7 +80,6 @@ class ChangeNameCallbacks: public BLECharacteristicCallbacks{
 
         for (int i = 0; (i < value.length() && i<25); i++){//-> name max length: 25
           name += value[i];
-          Serial.println(i);
         }
         Serial.println("new name: "+name);
 
@@ -149,6 +148,10 @@ void setup() {
 
   writeColorCharacteristic->setCallbacks(new WriteColorCallback());
   changeNameCharacteristic->setCallbacks(new ChangeNameCallbacks());
+
+  String notValue = name.c_str();
+  changeNameCharacteristic->setValue((uint8_t*)notValue.c_str(), notValue.length());
+
   Serial.println("BLE Characteristics created");
 
 
