@@ -41,26 +41,40 @@ class WriteColorCallback: public BLECharacteristicCallbacks {
 
       std::string value = pCharacteristic->getValue();
 
-      String json = "";
+      String data = "";
 
       if (value.length() > 0) {
         Serial.println("*********");
         Serial.print("New value: ");
         for (int i = 0; i < value.length(); i++){
           Serial.print(value[i]);
-          json += value[i];
+          data += value[i];
         }
         Serial.println();
-        Serial.println("message: "+ json);
+        Serial.println("message: "+ data);
         Serial.println("*********");
 
-        JsonDocument doc;
-        deserializeJson(doc, json);
+        //old
+        /*JsonDocument doc;
+        deserializeJson(doc, data);
         int r = doc["r"];
 
         redW = doc["r"];
         greenW = doc["g"];
-        blueW = doc["b"];
+        blueW = doc["b"];*/
+
+        String red = data.substring(0, 3);
+        String green = data.substring(4, 7);
+        String blue = data.substring(8, 11);
+
+        redW = red.toInt();
+        greenW = green.toInt();
+        blueW = blue.toInt();
+
+        /*Serial.print("value: ");
+        Serial.print(String(redW) + ".");
+        Serial.print(String(greenW) + ".");
+        Serial.println(String(blueW) + ".");*/
 
       }
     }
@@ -192,12 +206,12 @@ void loop() {
 
   if(connectedClients >= 1 && write == true){
     
-      String responsJson = "{\"r\":" + String(redW) + ",\"g\":" + String(greenW) + ",\"b\":" + String(blueW) + "}";
+      //String responsJson = "{\"r\":" + String(redW) + ",\"g\":" + String(greenW) + ",\"b\":" + String(blueW) + "}";
+      String responsJson = String(redW)+","+ String(greenW)+","+String(blueW);
       String notValue = responsJson.c_str();
       writeColorCharacteristic->setValue((uint8_t*)notValue.c_str(), notValue.length());
       writeColorCharacteristic->notify();
       Serial.println("Notified value: " + String(notValue));
-
   }
 
 
