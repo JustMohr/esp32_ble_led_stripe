@@ -9,7 +9,7 @@ BLEServer* pServer = NULL;
 BLECharacteristic* writeColorCharacteristic = NULL;
 BLECharacteristic* changeNameCharacteristic = NULL;
 
-#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define SERVICE_UUID                   "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID_WRITECOLOR "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define CHARACTERISTIC_UUID_CHANGENAME "58479a2e-b3d3-4cbe-8131-1d346e34f349"
 
@@ -18,9 +18,6 @@ int redW = 255;
 int greenW = 255;
 int blueW = 255;
 
-int redOld = 255;
-int greenOld = 255;
-int blueOld = 255;
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -70,11 +67,6 @@ class WriteColorCallback: public BLECharacteristicCallbacks {
         redW = red.toInt();
         greenW = green.toInt();
         blueW = blue.toInt();
-
-        /*Serial.print("value: ");
-        Serial.print(String(redW) + ".");
-        Serial.print(String(greenW) + ".");
-        Serial.println(String(blueW) + ".");*/
 
       }
     }
@@ -151,7 +143,6 @@ void setup() {
   // Create a BLE Characteristic
   writeColorCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID_WRITECOLOR,
-                      BLECharacteristic::PROPERTY_READ   |
                       BLECharacteristic::PROPERTY_WRITE
                     );
   changeNameCharacteristic = pService->createCharacteristic(
@@ -183,43 +174,15 @@ void setup() {
 
 }
 
-int counter = 0;
 void loop() {
 
-  int connectedClients = pServer->getConnectedCount();
+  //int connectedClients = pServer->getConnectedCount();
   //Serial.println("Connected clients: " + String(connectedClients));
-  
-
-  bool write = false;
-  if(redOld != redW || greenOld != greenW || blueOld != blueW){
-      redOld = redW;
-      greenOld = greenW;
-      blueOld = blueW;
-      counter = 0;
-  }
-
-  if(counter == 50){
-    write = true;
-  }
-
-
-
-  if(connectedClients >= 1 && write == true){
-    
-      //String responsJson = "{\"r\":" + String(redW) + ",\"g\":" + String(greenW) + ",\"b\":" + String(blueW) + "}";
-      String responsJson = String(redW)+","+ String(greenW)+","+String(blueW);
-      String notValue = responsJson.c_str();
-      writeColorCharacteristic->setValue((uint8_t*)notValue.c_str(), notValue.length());
-      writeColorCharacteristic->notify();
-      Serial.println("Notified value: " + String(notValue));
-  }
-
 
   analogWrite(15, redW);
   analogWrite(2, greenW);
   analogWrite(0, blueW);
   delay(2);
-  counter ++;
 
 }
 
